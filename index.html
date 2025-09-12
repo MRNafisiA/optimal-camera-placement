@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>My first three.js app</title>
+        <style>
+            @font-face {
+                font-family: iranSans;
+                src: url('/IRANSansWeb(FaNum) Medium.ttf') format('TrueType');
+            }
+
+            * {
+                box-sizing: border-box;
+                font-family: iranSans, serif;
+                direction: rtl;
+            }
+
+            html {
+                font-size: 16px;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+            }
+
+            .root {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .header {
+                flex-basis: 4rem;
+                flex-grow: 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 1.5rem;
+
+                > img {
+                    height: 4rem;
+                }
+
+                > span {
+                    font-size: 1.2rem;
+                }
+            }
+
+            .main {
+                flex-basis: 0;
+                flex-grow: 1;
+                position: relative;
+            }
+
+            .data {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 15rem;
+                height: 100%;
+                background: white;
+                transition: height 0.4s;
+                overflow: auto;
+            }
+
+            .data-toggle {
+                height: 6rem;
+
+                > div {
+                    height: 2rem;
+                    display: flex;
+                    width: 100%;
+
+                    > * {
+                        flex-basis: 0;
+                        flex-grow: 1;
+                    }
+                }
+            }
+
+            .input-container {
+                display: flex;
+                flex-direction: column;
+                padding: 0 1rem;
+
+                > * {
+                    margin-top: 0.5rem;
+                }
+            }
+
+            .data-label-type-a > label {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 0.85rem;
+
+                > input {
+                    width: 5rem;
+                }
+            }
+
+            .data-label-type-b {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                font-size: 0.85rem;
+
+                > label {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 0.85rem;
+
+                    > input {
+                        width: 5rem;
+                    }
+                }
+            }
+            .data-label-type-c {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                font-size: 0.85rem;
+
+                > label {
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 0.85rem;
+
+                    > input {
+                        width: 10rem;
+                    }
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="root">
+            <div class="header">
+                <span>محمدرضا نفیسی اصل</span>
+                <span>شبیه سازی سه بعدی برای ارائه پایان نامه</span>
+                <img src="/download.png" alt="tehran-university-logo" />
+            </div>
+            <div id="main" class="main">
+                <div id="data" class="data">
+                    <div class="data-toggle">
+                        <div>
+                            <button id="data-toggle">نمایش/مخفی تنظیمات</button>
+                        </div>
+                        <div>
+                            <button id="start-algorithm">اجرای الگوریتم</button>
+                        </div>
+                        <div>
+                            <button id="save">ذخیره سازی</button>
+                            <button id="load">بارگذاری</button>
+                        </div>
+                    </div>
+                    <div class="input-container">
+                        <div class="data-label-type-a">
+                            <label>
+                                سرعت حرکت دوربین:
+                                <input
+                                    id="camera-position-speed"
+                                    type="number"
+                                />
+                            </label>
+                        </div>
+                        <div class="data-label-type-a">
+                            <label>
+                                سرعت چرخش دوربین:
+                                <input
+                                    id="camera-rotation-speed"
+                                    type="number"
+                                />
+                            </label>
+                        </div>
+                        <div class="data-label-type-a">
+                            <label>
+                                میدان دید دوربین:
+                                <input id="camera-fov" type="number" />
+                            </label>
+                        </div>
+                        <div class="data-label-type-b">
+                            <span>مختصات دوربین:</span>
+                            <label>
+                                X
+                                <input id="camera-position-x" type="number" />
+                            </label>
+                            <label>
+                                Y
+                                <input id="camera-position-y" type="number" />
+                            </label>
+                            <label>
+                                Z
+                                <input id="camera-position-z" type="number" />
+                            </label>
+                        </div>
+                        <div class="data-label-type-b">
+                            <span>زاویه دید دوربین:</span>
+                            <label>
+                                Pitch
+                                <input
+                                    id="camera-rotation-pitch"
+                                    type="number"
+                                />
+                            </label>
+                            <label>
+                                Yaw
+                                <input id="camera-rotation-yaw" type="number" />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="module" src="/src/main.js"></script>
+    </body>
+</html>
