@@ -378,6 +378,16 @@ const drawPoint = ([x, y, z]: Point, color: number) => {
     sphere.position.set(y, z, x);
     scene.add(sphere);
 };
+const drawCircle = ([x, y, z]: Point, radius: number, color: number) => {
+    const geometry = new THREE.CircleGeometry(radius, 32);
+    const material = new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide
+    });
+    const circle = new THREE.Mesh(geometry, material);
+    circle.position.set(y, z, x);
+    scene.add(circle);
+};
 const downloadJSON = (data: unknown, filename: string) => {
     const jsonString =
         typeof data === 'string' ? data : JSON.stringify(data, null, 4);
