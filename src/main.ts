@@ -50,6 +50,7 @@ const {
     ) as HTMLInputElement
 }))();
 
+let counter = 1;
 const initThreeJS = () => {
     const { width, height } = mainDiv.getBoundingClientRect();
 
@@ -176,8 +177,17 @@ const setElementsEvent = () => {
             }, 100);
         }
     };
-    startAlgorithmButton.onclick = async () => {
-        localStorage.setItem('auto-index', '0');
+    startAlgorithmButton.onclick = () => {
+        const interval = setInterval(() => {
+            window.open(
+                `http://localhost:5173?start=${++counter}`,
+                '_blank',
+                'width=600,height=600'
+            );
+            if (counter >= 500) {
+                clearInterval(interval);
+            }
+        }, 40_000);
     };
     saveButton.onclick = () => {
         config.save();
@@ -807,83 +817,93 @@ const scenarioB = (
 };
 
 // const { obstacles, targetAreas, cameras } = scenarioA();
-// const { obstacles, targetAreas, cameras } = scenarioB(50, 50, 0.2, 0.04, 0.006);
-// const { obstacles, targetAreas, cameras } = Out;
+const { obstacles, targetAreas, cameras } = scenarioB(30, 30, 0.5, 0.05, 0.01);
+obstacles.forEach(({ points }, index) => {
+    if (index === 0) {
+        return;
+    }
+    drawPolygon(points, getObstacleColor());
+});
+targetAreas.forEach(({ points }) => drawPolygon(points, 0xff0000));
+Array.from(new Set(cameras.map(({ position: [x, y, z] }) => `${x}!${y}!${z}`)))
+    .map(v => {
+        const [x, y, z] = v.split('!');
+        return [Number(x), Number(y), Number(z)] as Point;
+    })
+    .forEach(position => drawCamera(position));
 
-const states = [10, 15, 20, 25, 30, 35, 40, 45, 50].flatMap(size =>
-    [0.15, 0.2, 0.25, 0.3].flatMap(obstaclesProbability =>
-        [0.02, 0.03, 0.04, 0.05].flatMap(targetAreasProbability =>
-            [0.005, 0.008, 0.011, 0.015].flatMap(cameraProbability => ({
-                size,
-                obstaclesProbability,
-                targetAreasProbability,
-                cameraProbability
-            }))
-        )
-    )
-);
-const temp = localStorage.getItem('auto-index');
-const autoIndex = Number(temp);
-if (temp !== null && 0 <= autoIndex && autoIndex < states.length) {
-    const {
-        size,
-        obstaclesProbability,
-        targetAreasProbability,
-        cameraProbability
-    } = states[autoIndex];
-    console.log({
-        size,
-        obstaclesProbability,
-        targetAreasProbability,
-        cameraProbability
-    });
-    const { obstacles, targetAreas, cameras } = scenarioB(
-        size,
-        size,
-        obstaclesProbability,
-        targetAreasProbability,
-        cameraProbability
-    );
-    obstacles.forEach(({ points }, index) => {
-        if (index === 0) {
-            return;
-        }
-        drawPolygon(points, getObstacleColor());
-    });
-    targetAreas.forEach(({ points }) => drawPolygon(points, 0xff0000));
-    Array.from(
-        new Set(cameras.map(({ position: [x, y, z] }) => `${x}!${y}!${z}`))
-    )
-        .map(v => {
-            const [x, y, z] = v.split('!');
-            return [Number(x), Number(y), Number(z)] as Point;
-        })
-        .forEach(position => drawCamera(position));
-
-    const result = await startAlgorithm(
-        config.value,
-        obstacles,
-        targetAreas,
-        cameras
-    );
-    downloadJSON(
-        {
-            ...result,
-            problem: {
-                size,
-                obstaclesProbability,
-                targetAreasProbability,
-                cameraProbability
-            }
-        },
-        `problem-${autoIndex}.json`
-    );
-    localStorage.setItem('auto-index', (autoIndex + 1).toString());
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
-}
-
+// const states = [10, 15, 20, 25, 30, 35, 40, 45, 50].flatMap(size =>
+//     [0.15, 0.2, 0.25, 0.3].flatMap(obstaclesProbability =>
+//         [0.02, 0.03, 0.04, 0.05].flatMap(targetAreasProbability =>
+//             [0.005, 0.008, 0.011, 0.015].flatMap(cameraProbability => ({
+//                 size,
+//                 obstaclesProbability,
+//                 targetAreasProbability,
+//                 cameraProbability
+//             }))
+//         )
+//     )
+// );
+// const urlParams = new URLSearchParams(window.location.search);
+// const temp = urlParams.get('start');
+// const autoIndex = Number(temp);
+// if (temp !== null && 0 <= autoIndex && autoIndex < states.length) {
+//     const {
+//         size,
+//         obstaclesProbability,
+//         targetAreasProbability,
+//         cameraProbability
+//     } = states[autoIndex];
+//     console.log({
+//         size,
+//         obstaclesProbability,
+//         targetAreasProbability,
+//         cameraProbability
+//     });
+//     const { obstacles, targetAreas, cameras } = scenarioB(
+//         size,
+//         size,
+//         obstaclesProbability,
+//         targetAreasProbability,
+//         cameraProbability
+//     );
+//
+//     const result = await startAlgorithm(
+//         config.value,
+//         obstacles,
+//         targetAreas,
+//         cameras
+//     );
+//     downloadJSON(
+//         '{' +
+//             '"config":' +
+//             JSON.stringify(result.config) +
+//             ', "obstacles":' +
+//             JSON.stringify(result.obstacles) +
+//             ', "targetAreas":' +
+//             JSON.stringify(result.targetAreas) +
+//             ', "cells":' +
+//             JSON.stringify(result.cells) +
+//             ', "cameras":' +
+//             JSON.stringify(result.cameras) +
+//             ', "originalSize":' +
+//             JSON.stringify(result.originalSize) +
+//             ', "originalMatrix": {' +
+//             Object.entries(result.originalMatrix)
+//                 .map(([key, value]) => `"${key}": ${JSON.stringify(value)}`)
+//                 .join(', ') +
+//             '}, "problem":' +
+//             JSON.stringify({
+//                 size,
+//                 obstaclesProbability,
+//                 targetAreasProbability,
+//                 cameraProbability
+//             }) +
+//             '}',
+//         `problem-${autoIndex}.json`
+//     );
+//     window.close();
+// }
 // setTimeout(() => {
 //     config.load();
 // }, 100);

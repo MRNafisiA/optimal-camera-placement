@@ -7,7 +7,7 @@ import type {
     Cell
 } from './types.ts';
 
-const CellsPerThread = 500;
+const CellsPerThread = 200;
 
 const dotVec = (p1: Point, p2: Point) =>
     p1[0] * p2[0] + p1[1] * p2[1] + p1[2] * p2[2];
@@ -589,7 +589,6 @@ const startAlgorithm = async (
             by = by === 'cell' ? 'camera' : 'cell';
         }
 
-        console.log(JSON.parse(JSON.stringify(originalMatrix)));
         console.info('optimizing DONE !!!');
         const keys = Object.keys(originalMatrix);
         return {
@@ -641,7 +640,6 @@ if (self.window === undefined) {
                 );
             }
         });
-        optimizeMatrix(partialMatrix, 'cell');
         self.postMessage(partialMatrix);
     });
 }
