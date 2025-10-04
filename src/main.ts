@@ -1,5 +1,12 @@
 import * as THREE from 'three';
-import { startAlgorithm } from './algorithm.ts';
+import {
+    divideVec,
+    getNormalizedOrthogonalVectors,
+    isPointInPolygon3D,
+    multiplyVec,
+    startAlgorithm,
+    sumVec
+} from './algorithm.ts';
 import { defaultConfig } from './defaultConfig.ts';
 import type { Point, Config, Camera, Obstacle, TargetArea } from './types.ts';
 
@@ -178,16 +185,134 @@ const setElementsEvent = () => {
         }
     };
     startAlgorithmButton.onclick = () => {
-        const interval = setInterval(() => {
-            window.open(
-                `http://localhost:5173?start=${++counter}`,
-                '_blank',
-                'width=600,height=600'
-            );
-            if (counter >= 500) {
-                clearInterval(interval);
+        const polygon = targetAreas[2].points;
+        const { v1, v2 } = getNormalizedOrthogonalVectors(
+            polygon[0],
+            polygon[1],
+            polygon[2]
+        );
+        const startPoint = polygon[0];
+        const allCV1s = [];
+        const allCV2s = [];
+
+        // solve 3x2 equation problem
+        const zeroThreshold = 0.0000000001;
+        for (const point of polygon) {
+            const a = [
+                [v1[0], v2[0], point[0] - startPoint[0]],
+                [v1[1], v2[1], point[1] - startPoint[1]],
+                [v1[2], v2[2], point[2] - startPoint[2]]
+            ];
+
+            for (let i = 0; i < 2; i++) {
+                if (Math.abs(a[i][i]) <= zeroThreshold) {
+                    const candidateRowIndex = a.findIndex(
+                        (v, index) =>
+                            Math.abs(v[i]) > zeroThreshold && index > i
+                    );
+                    const temp = a[candidateRowIndex];
+                    a[candidateRowIndex] = a[i];
+                    a[i] = temp;
+                }
+                for (let j = i + 1; j < 3; j++) {
+                    if (Math.abs(a[j][i]) > zeroThreshold) {
+                        const coefficient = a[j][i] / a[i][i];
+                        a[j][0] -= coefficient * a[i][0];
+                        a[j][1] -= coefficient * a[i][1];
+                        a[j][2] -= coefficient * a[i][2];
+                    }
+                }
             }
-        }, 40_000);
+            if (Math.abs(a[0][1]) > zeroThreshold) {
+                const coefficient = a[0][1] / a[1][1];
+                a[0][0] -= coefficient * a[1][0];
+                a[0][1] -= coefficient * a[1][1];
+                a[0][2] -= coefficient * a[1][2];
+            }
+
+            if (
+                !(
+                    Math.abs(a[2][0]) <= zeroThreshold &&
+                    Math.abs(a[2][1]) <= zeroThreshold &&
+                    Math.abs(a[2][2]) <= zeroThreshold &&
+                    Math.abs(a[0][1]) <= zeroThreshold &&
+                    Math.abs(a[1][0]) <= zeroThreshold &&
+                    Math.abs(a[0][0]) > zeroThreshold &&
+                    Math.abs(a[1][1]) > zeroThreshold
+                )
+            ) {
+                throw 'can not solve matrix.';
+            }
+            allCV1s.push(a[0][2] / a[0][0]);
+            allCV2s.push(a[1][2] / a[1][1]);
+        }
+
+        // get grid points
+        const minCV1 = Math.min(...allCV1s);
+        const maxCV1 = Math.max(...allCV1s);
+        const cV2 =
+            Math.min(...allCV2s) !== 0
+                ? Math.min(...allCV2s)
+                : Math.max(...allCV2s);
+
+        for (let i = minCV1; i < maxCV1; i += config.value.gridResolution.x) {
+            const sign = cV2 > 0 ? 1 : -1;
+            for (
+                let j = 0;
+                j < Math.abs(cV2) / config.value.gridResolution.y;
+                j++
+            ) {
+                const firstPoint = sumVec(
+                    sumVec(startPoint, multiplyVec(v1, i)),
+                    multiplyVec(v2, j * sign * config.value.gridResolution.y)
+                );
+                const secondPoint = sumVec(
+                    sumVec(
+                        startPoint,
+                        multiplyVec(v1, i + config.value.gridResolution.x)
+                    ),
+                    multiplyVec(v2, j * sign * config.value.gridResolution.y)
+                );
+                const cell: Point[] = [
+                    firstPoint,
+                    secondPoint,
+                    sumVec(
+                        secondPoint,
+                        multiplyVec(v2, sign * config.value.gridResolution.y)
+                    ),
+                    sumVec(
+                        firstPoint,
+                        multiplyVec(v2, sign * config.value.gridResolution.y)
+                    )
+                ];
+
+                const averagePoint: Point = cell.reduce(
+                    (pre, point, i) => {
+                        if (i === cell.length - 1) {
+                            return divideVec(sumVec(pre, point), cell.length);
+                        }
+                        return sumVec(pre, point);
+                    },
+                    [0, 0, 0]
+                );
+                if (isPointInPolygon3D(polygon, averagePoint)) {
+                    drawPoint(averagePoint, 0x00fff0);
+                } else {
+                    drawPoint(averagePoint, 0x0ffff00);
+                }
+            }
+        }
+
+        // const interval = setInterval(() => {
+        //     window.open(
+        //         `http://localhost:5173?start=${++counter}`,
+        //         '_blank',
+        //         'width=600,height=600'
+        //     );
+        //     if (counter >= 500) {
+        //         clearInterval(interval);
+        //     }
+        // }, 40_000);
     };
     saveButton.onclick = () => {
         config.save();
@@ -816,8 +941,8 @@ const scenarioB = (
     return { obstacles, targetAreas, cameras };
 };
 
-// const { obstacles, targetAreas, cameras } = scenarioA();
-const { obstacles, targetAreas, cameras } = scenarioB(30, 30, 0.5, 0.05, 0.01);
+const { obstacles, targetAreas, cameras } = scenarioA();
+// const { obstacles, targetAreas, cameras } = scenarioB(30, 30, 0.5, 0.05, 0.01);
 obstacles.forEach(({ points }, index) => {
     if (index === 0) {
         return;
